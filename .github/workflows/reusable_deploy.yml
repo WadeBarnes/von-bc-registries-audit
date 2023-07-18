@@ -7,7 +7,7 @@ on:
       environment:
         description: the environment to deploy to
         required: true
-      openshift_server_url: 
+      openshift_server_url:
         description: openshift server url
         required: true
       image_digest:
@@ -21,7 +21,7 @@ on:
         required: true
       openshift_image_name:
         description: openshift image name to be created
-        required: true 
+        required: true
     secrets:
       ROCKETCHAT_WEBHOOK:
         description: defining the rocket chat webhook url
@@ -29,9 +29,9 @@ on:
       ROCKETCHAT_TOKEN:
         description: defining the rocket chat token
         required: true
-      # GITHUB_TOKEN:
-        # description: secret token used to webhook github and rocketchat 
-        # required: true
+      GH_TOKEN:
+        description: secret token used to webhook github and rocketchat
+        required: true
       OPENSHIFT_TOKEN:
         description: openshift server token
         required: true
@@ -46,7 +46,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Openshift CLI
         uses: redhat-actions/oc-login@v1

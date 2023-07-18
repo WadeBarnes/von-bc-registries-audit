@@ -4,7 +4,7 @@ name: Build and Deploy Audit Image
 #   - Limit workflow runs to the main repo so it does not try to run on someone else's fork.
 on:
   workflow_dispatch:
-  pull_request: 
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -73,86 +73,73 @@ jobs:
     needs: build
     permissions:
       packages: write
-    runs-on: ubuntu-latest
     environment: dev
+    uses: ./.github/workflows/reusable_deploy.yml
+    with:
+      environment: dev
+      openshift_server_url: ${{ vars.OPENSHIFT_SERVER_URL }}
+      image_digest: ${{ needs.build.outputs.image_digest }}
+      namespace: ca7f8f-dev
+      github_image_name: ghcr.io/bcgov/von-bc-registries-audit/audit
+      openshift_image_name: image-registry.apps.silver.devops.gov.bc.ca/ca7f8f-tools/audit
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+      OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+      ROCKETCHAT_TOKEN: ${{ secrets.ROCKETCHAT_TOKEN }}
 
-    # ToDo:
-    #   - Define the 'environment' using an environment variable so it can also be used to define the tags.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # deploy2test:
+  #   needs: [build, deploy2dev]
+  #   permissions:
+  #     packages: write
+  #   runs-on: ubuntu-latest
+  #   environment: test
 
-      - name: deploy to dev
-        uses: ./.github/workflows/reusable_deploy.yml
-        with:
-          environment: dev
-          openshift_server_url: ${{ vars.OPENSHIFT_SERVER_URL }}
-          # OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-          image_digest: ${{ needs.build.outputs.image_digest }}
-          namespace: ca7f8f-dev
-          # ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          # ROCKETCHAT_TOKEN: ${{ inputs.ROCKETCHAT_TOKEN }}
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          github_image_name: ghcr.io/bcgov/von-bc-registries-audit/audit
-          openshift_image_name: image-registry.apps.silver.devops.gov.bc.ca/ca7f8f-tools/audit
-        secrets: 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-          ROCKETCHAT_TOKEN: ${{ secrets.ROCKETCHAT_TOKEN }}
+  #   # ToDo:
+  #   #   - Define the 'environment' using an environment variable so it can also be used to define the tags.
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  deploy2test:
-    needs: [build, deploy2dev]
-    permissions:
-      packages: write
-    runs-on: ubuntu-latest
-    environment: test
-    
-    # ToDo:
-    #   - Define the 'environment' using an environment variable so it can also be used to define the tags.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: deploy to test
+  #       uses: ./.github/workflows/actions/deploy
+  #       with:
+  #         environment: test
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #         openshift_server_url: ${{ vars.OPENSHIFT_SERVER_URL }}
+  #         OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+  #         image_digest: ${{ needs.build.outputs.image_digest }}
+  #         namespace: ca7f8f-test
+  #         ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         github_image_name: ghcr.io/bcgov/von-bc-registries-audit/audit
+  #         openshift_image_name: image-registry.apps.silver.devops.gov.bc.ca/ca7f8f-tools/audit
 
-      - name: deploy to test
-        uses: ./.github/workflows/actions/deploy
-        with:
-          environment: test
-          password: ${{ secrets.GITHUB_TOKEN }}
-          openshift_server_url: ${{ vars.OPENSHIFT_SERVER_URL }}
-          OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-          image_digest: ${{ needs.build.outputs.image_digest }}
-          namespace: ca7f8f-test
-          ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          github_image_name: ghcr.io/bcgov/von-bc-registries-audit/audit
-          openshift_image_name: image-registry.apps.silver.devops.gov.bc.ca/ca7f8f-tools/audit
+  # deploy2prod:
+  #   needs: [build, deploy2dev, deploy2test]
+  #   permissions:
+  #     packages: write
+  #   runs-on: ubuntu-latest
+  #   environment: prod
 
-  deploy2prod:
-    needs: [build, deploy2dev, deploy2test]
-    permissions:
-      packages: write
-    runs-on: ubuntu-latest
-    environment: prod
-        
-    # ToDo:
-    #   - Define the 'environment' using an environment variable so it can also be used to define the tags.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   # ToDo:
+  #   #   - Define the 'environment' using an environment variable so it can also be used to define the tags.
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: deploy to prod
-        uses: ./.github/workflows/actions/deploy
-        with:
-          environment: prod
-          password: ${{ secrets.GITHUB_TOKEN }}
-          openshift_server_url: ${{ vars.OPENSHIFT_SERVER_URL }}
-          OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-          image_digest: ${{ needs.build.outputs.image_digest }}
-          namespace: ca7f8f-prod
-          ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          github_image_name: ghcr.io/bcgov/von-bc-registries-audit/audit
-          openshift_image_name: image-registry.apps.silver.devops.gov.bc.ca/ca7f8f-tools/audit
-          
+  #     - name: deploy to prod
+  #       uses: ./.github/workflows/actions/deploy
+  #       with:
+  #         environment: prod
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #         openshift_server_url: ${{ vars.OPENSHIFT_SERVER_URL }}
+  #         OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+  #         image_digest: ${{ needs.build.outputs.image_digest }}
+  #         namespace: ca7f8f-prod
+  #         ROCKETCHAT_WEBHOOK: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         github_image_name: ghcr.io/bcgov/von-bc-registries-audit/audit
+  #         openshift_image_name: image-registry.apps.silver.devops.gov.bc.ca/ca7f8f-tools/audit
+
 
